@@ -24,7 +24,9 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
-INSTALLED_APPS = [
+SHARED_APPS = [
+    'django_tenants',
+    'tenants.apps.TenantsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -32,11 +34,18 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'api.apps.ApiConfig',
-    'data_manager.apps.DataManagerConfig'
 ]
 
+TENANT_APPS = [
+    'django.contrib.admin',
+    'api.apps.ApiConfig',
+    'data_manager.apps.DataManagerConfig',
+]
+
+INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
+
 MIDDLEWARE = [
+    'django_tenants.middleware.main.TenantMainMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -78,8 +87,15 @@ DATABASES = {
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
+
 }
 
+DATABASE_ROUTERS = (
+    'django_tenants.routers.TenantSyncRouter',
+)
+
+TENANT_MODEL = 'tenants.Client'
+TENANT_DOMAIN_MODEL = 'tenants.Domain'
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
